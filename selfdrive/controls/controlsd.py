@@ -25,6 +25,11 @@ LaneChangeDirection = log.LaneChangeDirection
 
 ACTUATOR_FIELDS = tuple(car.CarControl.Actuators.schema.fields.keys())
 
+RIGHT_DRIFT_MIN_SPEED = 5.0  # m/s
+RIGHT_DRIFT_MAX_SPEED = 30.0  # m/s
+RIGHT_DRIFT_TARGET = 0.0005
+RIGHT_DRIFT_STEP = 0.00005
+
 
 class Controls:
   def __init__(self) -> None:
@@ -43,6 +48,8 @@ class Controls:
     self.steer_limited_by_safety = False
     self.curvature = 0.0
     self.desired_curvature = 0.0
+    self.right_drift = 0.0
+    self.right_drift_target = 0.0
 
     self.pose_calibrator = PoseCalibrator()
     self.calibrated_pose: Pose | None = None
@@ -67,6 +74,17 @@ class Controls:
 
   def state_control(self):
     CS = self.sm['carState']
+
+    drift_req = self.params.get('RequestRightDrift')
+    if drift_req == b'1':
+      if RIGHT_DRIFT_MIN_SPEED <= CS.vEgo <= RIGHT_DRIFT_MAX_SPEED:
+        self.right_drift_target = RIGHT_DRIFT_TARGET
+      self.params.put('RequestRightDrift', b'0')
+
+    if self.right_drift < self.right_drift_target:
+      self.right_drift = min(self.right_drift_target, self.right_drift + RIGHT_DRIFT_STEP)
+    elif self.right_drift > self.right_drift_target:
+      self.right_drift = self.right_drift_target
 
     # Update VehicleModel
     lp = self.sm['liveParameters']
@@ -115,7 +133,8 @@ class Controls:
 
     # Steering PID loop and lateral MPC
     # Reset desired curvature to current to avoid violating the limits on engage
-    new_desired_curvature = model_v2.action.desiredCurvature if CC.latActive else self.curvature
+    base_desired_curvature = model_v2.action.desiredCurvature if CC.latActive else self.curvature
+    new_desired_curvature = base_desired_curvature - self.right_drift
     self.desired_curvature, curvature_limited = clip_curvature(CS.vEgo, self.desired_curvature, new_desired_curvature, lp.roll)
 
     actuators.curvature = self.desired_curvature
