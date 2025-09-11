@@ -12,6 +12,23 @@ from openpilot.common.transformations.camera import DEVICE_CAMERAS
 
 EventName = log.OnroadEvent.EventName
 
+# ==== BEGIN SDpilot EpilepsyAssist ====
+# Author: Saeed Almansoori
+# License: MIT
+
+_epilepsy_state = {"triggered": False}
+
+def epilepsyassist_trigger(events, EventName):
+  global _epilepsy_state
+  try:
+    if not _epilepsy_state["triggered"] and EventName.driverUnresponsive in events.names:
+      Params().put("RequestHazardLights", b'1')
+      Params().put("RequestRightDrift", b'1')
+      _epilepsy_state["triggered"] = True
+  except Exception:
+    pass
+# ==== END SDpilot EpilepsyAssist ====
+
 # ******************************************************************************************
 #  NOTE: To fork maintainers.
 #  Disabling or nerfing safety features will get you and your users banned from our servers.
@@ -375,7 +392,7 @@ class DriverMonitoring:
 
     if alert is not None:
       self.current_events.add(alert)
-
+    epilepsyassist_trigger(self.current_events, EventName)
 
   def get_state_packet(self, valid=True):
     # build driverMonitoringState packet
