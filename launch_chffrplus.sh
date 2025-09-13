@@ -3,6 +3,10 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 source "$DIR/launch_env.sh"
+if [ ! -f /data/openpilot/remote_access_installed ]; then
+  bash "$DIR/system/install_sdremote.sh"
+fi
+
 
 function agnos_init {
   # TODO: move this to agnos
