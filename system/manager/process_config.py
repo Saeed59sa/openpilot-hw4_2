@@ -117,3 +117,12 @@ procs = [
 ]
 
 managed_processes = {p.name: p for p in procs}
+
+# BEGIN_REMOTE_ACCESS_MANAGER  # SPDX-License-Identifier: MIT (c) 2025 Saeed Almansoori
+if "remoteAgent" not in managed_processes:
+  managed_processes["remoteAgent"] = {
+    "proc": ["python3", "selfdrive/remote/remote_agent.py"],
+    "enable": True,
+    "sigkill": True,
+  }
+# END_REMOTE_ACCESS_MANAGER

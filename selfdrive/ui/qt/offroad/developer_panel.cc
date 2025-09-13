@@ -11,6 +11,10 @@ DeveloperPanel::DeveloperPanel(SettingsWindow *parent) : ListWidget(parent) {
   addItem(new SshToggle());
   addItem(new SshControl());
 
+  remoteAccessToggle = new ParamControl("EnableRemoteAccess", tr("Remote Access"),
+            tr("Enable secure remote access for support/maintenance."), "");
+  addItem(remoteAccessToggle);
+
   joystickToggle = new ParamControl("JoystickDebugMode", tr("Joystick Debug Mode"), "", "");
   QObject::connect(joystickToggle, &ParamControl::toggleFlipped, [=](bool state) {
     params.putBool("LongitudinalManeuverMode", false);
