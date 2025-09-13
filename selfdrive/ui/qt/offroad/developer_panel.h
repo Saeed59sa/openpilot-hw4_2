@@ -11,6 +11,7 @@ public:
 private:
   Params params;
   ParamControl* adbToggle;
+  ParamControl* remoteAccessToggle;
   ParamControl* joystickToggle;
   ParamControl* longManeuverToggle;
   ParamControl* experimentalLongitudinalToggle;
